@@ -1,5 +1,6 @@
 # Dewr-data
 Scrapper code
+
 import scrapy
 import os
 from urllib.parse import urljoin
