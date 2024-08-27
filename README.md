@@ -1,55 +1,49 @@
-# Dewr-data
-Scrapper code
+DEWR Evaluations Scraper
+This project uses a Scrapy spider to scrape DOCX and PDF files from the DEWR Employment Services Evaluations website.
 
-import scrapy
-import os
-from urllib.parse import urljoin
-class DewrEvaluationsSpider(scrapy.Spider):
-    name = 'dewr_evaluations'
-    allowed_domains = ['dewr.gov.au']
-    start_urls = ['https://www.dewr.gov.au/employment-services-evaluations']
-    
-    custom_settings = {
-        'DOWNLOAD_DELAY': 2,  # Delay between requests
-        'USER_AGENT': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36'
-    }
-    file_counter = 1
+Step-by-Step Guide
+1. Set Up Your Environment
+Install Python 3.11 or later.
+Install Scrapy by running:
+bash
+Copy code
+pip install scrapy
+2. Create the Scrapy Project
+Create a new Scrapy project:
+bash
+Copy code
+scrapy startproject dewr_scraper
+Navigate to the dewr_scraper/spiders directory and create a new spider file dewr_evaluations_spider.py.
+3. Write the Spider
+In the dewr_evaluations_spider.py file, define the spider class. Set the start_urls to the DEWR evaluations page.
+Implement the parse method to extract DOCX and PDF links using CSS selectors.
+Use the save_file method to download and save the files. Ensure filenames are unique by appending a counter or timestamp.
+Categorize the files by extension and save them in designated folders.
+4. Run the Spider
+Navigate to the project directory:
 
-    def parse(self, response):
-        # Check if the content is HTML
-        if "text/html" in response.headers.get("Content-Type", b"").decode("utf-8"):
-            # Extract links to DOCX and PDF files
-            for link in response.css('a.file::attr(href)').getall():
-                if link.endswith('.docx'):
-                    yield response.follow(link, callback=self.save_file)
+bash
+Copy code
+cd dewr_scraper
+Run the spider:
 
-            # Follow other internal links
-            for link in response.css('a::attr(href)').getall():
-                if link.startswith('/'):
-                    yield response.follow(link, callback=self.parse)
-        else:
-            # If the content is a PDF or DOCX, save the file
-            self.save_file(response)
-            
-    def save_file(self, response):
-        file_name = response.url.split('/')[-1]
-        file_extension = file_name.split('.')[-1]
-        unique_filename = f"{self.file_counter}_{file_name}"
-        self.file_counter += 1
-        # Determine the folder based on file extension
-        folder_map = {
-            'txt': 'downloaded_files/txt_files',
-            'html': 'downloaded_files/html_files',
-            'epub': 'downloaded_files/epub_files',
-            'mobi': 'downloaded_files/mobi_files',
-            'pdf': 'downloaded_files/pdf_files',
-            'doc': 'downloaded_files/doc_files'
-        }
+bash
+Copy code
+scrapy crawl dewr_evaluations
+The files will be downloaded and saved in categorized folders within the downloaded_files/ directory.
 
-        folder = folder_map.get(file_extension, 'downloaded_files/others')
-        save_path = os.path.join(folder, unique_filename)
-        os.makedirs(os.path.dirname(save_path), exist_ok=True)
-
-        with open(save_path, 'wb') as f:
-            f.write(response.body)
-        self.logger.info(f'Saved file {unique_filename}')
+5. File Organization
+Files are saved in the following directories based on their extension:
+txt_files/
+html_files/
+epub_files/
+mobi_files/
+pdf_files/
+doc_files/
+others/
+6. Customization
+Adjust the folder_map dictionary in the save_file method to customize file categorization.
+7. Further Processing
+Once downloaded, the files can be processed or cleaned as needed.
+License
+This project is licensed under the MIT License.
